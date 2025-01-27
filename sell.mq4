@@ -11,7 +11,7 @@
 
 datetime lastAlertTime = 0;
 double ExtLineBuffer[];
-int InpMAPeriod = 11; // Example EMA period
+int InpMAPeriod = 50; // Example EMA period
 
 //+------------------------------------------------------------------+
 //| Custom indicator initialization function                         |
