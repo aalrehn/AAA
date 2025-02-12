@@ -10,6 +10,7 @@
 #property indicator_chart_window
 
 datetime lastAlertTime = 0;
+int maPeriod = 50; // Moving Average Period
 
 int OnInit()
 {
@@ -35,7 +36,7 @@ void findLargestGreenCandle(const datetime &time[], const double &open[], const 
 {
    for (int i = 0; i <= rates_total - previousCandlesToCompare; i++)
    {
-      if (close[i] > open[i])
+      if (close[i] > open[i]) // Detect green candle
       {
          double currentCandleHigh = high[i];
          double currentCandleLow = low[i];
@@ -59,45 +60,49 @@ void findLargestGreenCandle(const datetime &time[], const double &open[], const 
             }
          }
 
-         if (isLargerThanPrevious && ((currentCandleHigh - close[i]) <= (candleLength * 0.05)))
+         if (isLargerThanPrevious && ((currentCandleHigh - close[i]) <= (candleLength * 0.05))) // Ensure high is near close
          {
-            if (time[i] != lastAlertTime)
+            double movingAverage = iMA(_Symbol, Period(), maPeriod, 0, MODE_SMA, PRICE_CLOSE, i); // Get MA value
+
+            if (close[i] > movingAverage) // Check if candle is above Moving Average
             {
-               lastAlertTime = time[i];
-
-               ObjectDelete(0, "LargestCandleVerticalLine");
-               ObjectDelete(0, "LargestCandleHorizontalLine");
-
-               datetime candleTime = time[i];
-
-               if (!ObjectCreate(0, "LargestCandleVerticalLine", OBJ_VLINE, 0, candleTime, 0))
+               if (time[i] != lastAlertTime)
                {
-                  Print("Error creating vertical line: ", GetLastError());
-               }
-               else
-               {
-                  Alert("TICKER ", _Symbol, "  TimeFrame ", Period());
-                  SendNotification("TICKER " + _Symbol + " TimeFrame " + IntegerToString(Period()));
-                  ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_COLOR, clrGreen);
-                  ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_WIDTH, 2);
-                  ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_STYLE, STYLE_DASH);
-               }
+                  lastAlertTime = time[i];
 
-               if (!ObjectCreate(0, "LargestCandleHorizontalLine", OBJ_HLINE, 0, 0, currentCandleHigh))
-               {
-                  Print("Error creating horizontal line: ", GetLastError());
+                  ObjectDelete(0, "LargestCandleVerticalLine");
+                  ObjectDelete(0, "LargestCandleHorizontalLine");
+
+                  datetime candleTime = time[i];
+
+                  if (!ObjectCreate(0, "LargestCandleVerticalLine", OBJ_VLINE, 0, candleTime, 0))
+                  {
+                     Print("Error creating vertical line: ", GetLastError());
+                  }
+                  else
+                  {
+                     Alert("TICKER ", _Symbol, "  TimeFrame ", Period());
+                     SendNotification("TICKER " + _Symbol + " TimeFrame " + IntegerToString(Period()));
+                     ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_COLOR, clrGreen);
+                     ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_WIDTH, 2);
+                     ObjectSetInteger(0, "LargestCandleVerticalLine", OBJPROP_STYLE, STYLE_DASH);
+                  }
+
+                  if (!ObjectCreate(0, "LargestCandleHorizontalLine", OBJ_HLINE, 0, 0, currentCandleHigh))
+                  {
+                     Print("Error creating horizontal line: ", GetLastError());
+                  }
+                  else
+                  {
+                     ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_COLOR, clrGreen);
+                     ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_WIDTH, 2);
+                     ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_STYLE, STYLE_DASH);
+                  }
                }
-               else
-               {
-                  ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_COLOR, clrGreen);
-                  ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_WIDTH, 2);
-                  ObjectSetInteger(0, "LargestCandleHorizontalLine", OBJPROP_STYLE, STYLE_DASH);
-               }
+               return;
             }
-
-            return;
          }
       }
    }
-   Print("No qualifying green candle found.");
+   Print("No qualifying green candle found above Moving Average.");
 }
