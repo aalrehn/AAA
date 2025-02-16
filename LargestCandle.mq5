@@ -10,20 +10,18 @@
 #property indicator_buffers 1
 #property indicator_plots   1
 
-// Input parameters
-input int InpMAPeriod = 50;  // Moving Average Period
 
-// Global variables
+input int InpMAPeriod = 20;  
+
+
 datetime    lastAlertTime = 0;
 int         handle_iMA;
 double      ExtMaBuffer[];
 
-//+------------------------------------------------------------------+
-//| Custom indicator initialization function                         |
-//+------------------------------------------------------------------+
+
 int OnInit()
 {
-   // Initialize MA
+
    handle_iMA = iMA(_Symbol, PERIOD_CURRENT, InpMAPeriod, 0, MODE_SMA, PRICE_CLOSE);
    if(handle_iMA == INVALID_HANDLE)
    {
@@ -31,15 +29,13 @@ int OnInit()
       return(INIT_FAILED);
    }
    
-   // Set buffer as series
+
    ArraySetAsSeries(ExtMaBuffer, true);
    
    return(INIT_SUCCEEDED);
 }
 
-//+------------------------------------------------------------------+
-//| Custom indicator deinitialization function                       |
-//+------------------------------------------------------------------+
+
 void OnDeinit(const int reason)
 {
    ObjectDelete(0, "LargestCandleVerticalLine");
@@ -48,9 +44,7 @@ void OnDeinit(const int reason)
       IndicatorRelease(handle_iMA);
 }
 
-//+------------------------------------------------------------------+
-//| Custom indicator iteration function                              |
-//+------------------------------------------------------------------+
+
 int OnCalculate(const int rates_total,
                 const int prev_calculated,
                 const int begin,
@@ -61,7 +55,7 @@ int OnCalculate(const int rates_total,
    MqlRates rates[];
    ArraySetAsSeries(rates, true);
    
-   // Copy rates data
+
    if(CopyRates(_Symbol, PERIOD_CURRENT, 0, rates_total, rates) <= 0)
    {
       Print("Error copying rates data, code ", GetLastError());
@@ -80,9 +74,7 @@ int OnCalculate(const int rates_total,
    return(rates_total);
 }
 
-//+------------------------------------------------------------------+
-//| Find largest green candle function                              |
-//+------------------------------------------------------------------+
+
 void findLargestGreenCandle(const MqlRates &rates[],
                            const double &ma[],
                            int rates_total,
